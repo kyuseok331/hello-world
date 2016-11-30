@@ -6,6 +6,8 @@
 
 #include "msg_queue.h"
 
+extern int HelpOutput(struct MsgQueue* q_out);
+
 extern int ErrorOutput(struct MsgQueue* q_out, char* msg);
 extern int WaitOutput(struct MsgQueue* q_out);
 
@@ -30,6 +32,8 @@ extern int TuneSet(struct MsgQueue* q_out, int freq);
 
 extern int SortOutput(struct MsgQueue* q_out);
 extern int SortSet(struct MsgQueue* q_out, char* new_sort);
+
+extern int StatusOutput(struct MsgQueue* q_out);
 
 extern int ExitOutput(struct MsgQueue* q_out);
 

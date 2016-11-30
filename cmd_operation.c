@@ -1,10 +1,15 @@
-// $Id$
-//
+/*
+ *  Functions for parser.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "msg_queue.h"
 #include "channel_db.h"
 
@@ -18,6 +23,44 @@ char prompt_str[32] = "DR> ";
 char mode_str[4] = "DAB";
 char sort_str[10] = "alpha";
 int cur_volume = 64;
+
+char *help_str[] = {
+    "help",
+    "version",
+    "volume [+-]<number>",
+    "time",
+    "prompt [\"<string>\"]",
+    "mode [DAB|FM]",
+    "reset",
+    "scan",
+    "tune <freq.>",
+    "sort [alpha|ensemble]",
+    "list [audio|data|all|preset|favorite]",
+    "search \"<string>\"",
+    "store <preset idx>|<favorite idx>",
+    "play <idx>|<preset idx>|<favorite idx>|last",
+    "prev",
+    "next",
+    "stop",
+    "info",
+    "signal",
+    "status",
+    ""
+};
+
+int HelpOutput(struct MsgQueue* q_out)
+{
+    char str[80];
+    char **pp;
+
+    for (pp=help_str; **pp; ++pp)
+    {
+        snprintf(str, 80, "%s\n", *pp);
+        MsgQueuePut(q_out, (void*) str);
+    }
+    return 0;
+}
+
 
 int ErrorOutput(struct MsgQueue* q_out, char* msg)
 {
@@ -142,11 +185,16 @@ int ScanOutput(struct MsgQueue* q_out)
     {
         snprintf(str, 80, "tuning %s %d kHz ...\n",
                 pcf->channel, pcf->frequency);
-        usleep(20000);
+        // usleep(20000);
         MsgQueuePut(q_out, (void*) str);
         pcf++;
     }
 
+    {
+        int i;
+        for (i=0; i<200; i++)
+            MsgQueuePut(q_out, (void*) str);
+    }
     ChTabInit();
 
     MsgQueuePut(q_out, (void*) "OK\n");
@@ -179,6 +227,52 @@ int SortSet(struct MsgQueue* q_out, char* new_sort)
     ChTabSort();
 
     MsgQueuePut(q_out, (void*) "OK\n");
+    return 0;
+}
+
+int StatusOutput(struct MsgQueue* q_out)
+{
+    char str[80];
+    DIR*           d;
+    struct dirent* dir;
+
+    snprintf(str, 80, "DLS: %s\n", "yes");
+    MsgQueuePut(q_out, (void*) str);
+
+    snprintf(str, 80, "SLS: %s\n", "yes");
+    MsgQueuePut(q_out, (void*) str);
+
+    snprintf(str, 80, "Announcement: %s\n", "none");
+    MsgQueuePut(q_out, (void*) str);
+
+    snprintf(str, 80, "Announcement: %s\n", "traffic in idx");
+    MsgQueuePut(q_out, (void*) str);
+
+    d = opendir(".");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (dir->d_type == DT_REG)
+            {
+                struct stat f;
+                char buff[20];
+                if (stat(dir->d_name, &f) != -1)
+                    // strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&f.st_mtime));
+                    strftime(buff, 20, "%b %d %H:%M:%S", localtime(&f.st_mtime));
+                else
+                    buff[0] = '\0';
+
+                snprintf(str, 80, "%s %s\n", buff, dir->d_name);
+                MsgQueuePut(q_out, (void*) str);
+            }
+        }
+
+        closedir(d);
+    }
+
+    MsgQueuePut(q_out, (void*) "OK\n");
+
     return 0;
 }
 

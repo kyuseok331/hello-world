@@ -237,7 +237,10 @@ int ChTabList(struct MsgQueue* q_out, int mode)
         MsgQueuePut(q_out, (void*) str);
     }
 
-    MsgQueuePut(q_out, (void*) "OK\n");
+    if (ii == 0)
+        MsgQueuePut(q_out, (void*) "There is no service in the list.\n");
+    else
+        MsgQueuePut(q_out, (void*) "OK\n");
 
     return 0;
 }
@@ -310,30 +313,6 @@ int ChTabInfo(struct MsgQueue* q_out)
     MsgQueuePut(q_out, (void*) str);
 
     snprintf(str, 80, "Date: %s\n", "dd-mm-yy");
-    MsgQueuePut(q_out, (void*) str);
-
-    MsgQueuePut(q_out, (void*) "OK\n");
-
-    return 0;
-}
-
-int ChTabStatus(struct MsgQueue* q_out)
-{
-    char str[80];
-    struct ChannelInfo* pci;    // channel info
-
-    pci = pchannel_tab[cur_ch_idx-1];
-
-    snprintf(str, 80, "DLS: %s\n", "yes");
-    MsgQueuePut(q_out, (void*) str);
-
-    snprintf(str, 80, "SLS: %s\n", "yes");
-    MsgQueuePut(q_out, (void*) str);
-
-    snprintf(str, 80, "Announcement: %s\n", "none");
-    MsgQueuePut(q_out, (void*) str);
-
-    snprintf(str, 80, "Announcement: %s\n", "traffic in idx");
     MsgQueuePut(q_out, (void*) str);
 
     MsgQueuePut(q_out, (void*) "OK\n");
@@ -420,7 +399,7 @@ int PresetRecall(struct MsgQueue* q_out, char* pslot)
     if (num > 0 && num <= PRESET_MAX)
     {
         ppi = &preset_tab[num-1];
-        if (ppi->long_name != NULL)
+        if (ppi->long_name[0] != NULL)
         {
             idx = ChTabFind(ppi);
             cur_ch_idx = idx;

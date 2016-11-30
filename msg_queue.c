@@ -6,6 +6,11 @@
 #include <string.h>
 #include "msg_queue.h"
 
+#define DEBUG 0
+#define DEBUG_PRINT(fmt, ...) \
+        do { if (DEBUG) fprintf(stdout, "%s:%d:%s(): " fmt, __FILE__, \
+                            __LINE__, __func__, ##__VA_ARGS__); } while (0)
+
 struct MsgQueue* MsgQueueCreate(int id, int len, int width)
 {
     int i;
@@ -53,18 +58,19 @@ int MsgQueuePut(struct MsgQueue* mq, void * p_data)
 {
     pthread_mutex_lock(&mq->m_mutex);
 
-    if( mq->m_is_empty )
+    if (mq->m_is_empty)
     {
         // mq->m_pp_data[mq->m_write_index] = p_data;
         strncpy(mq->m_pp_data[mq->m_write_index], p_data, mq->m_width);
         mq->m_write_index = (mq->m_write_index+1) % mq->m_len; // update write_index
         mq->m_is_empty = CD_FALSE;
-        pthread_cond_signal(&mq->m_get_cond);
     }
     else
     {
         if( mq->m_write_index == mq->m_read_index ) // if queue is full
         {
+            delay(30);  // msec.
+            DEBUG_PRINT("pthread_cond_wait %d %d\n", mq->m_id, mq->m_write_index);
             pthread_cond_wait(&mq->m_put_cond, &mq->m_mutex);
 
             // if queue is still full, show error message
@@ -82,6 +88,7 @@ int MsgQueuePut(struct MsgQueue* mq, void * p_data)
         mq->m_is_empty = CD_FALSE;
     }
 
+    pthread_cond_signal(&mq->m_get_cond);
     pthread_mutex_unlock(&mq->m_mutex);
     return CD_SUCCESS;
 }
@@ -92,6 +99,8 @@ void * MsgQueueGet(struct MsgQueue* mq, void* p_data)
 
     if( mq->m_is_empty )
     {
+        delay(30);  // msec.
+        DEBUG_PRINT("pthread_cond_wait %d %d\n", mq->m_id, mq->m_write_index);
         pthread_cond_wait(&mq->m_get_cond, &mq->m_mutex);
         if( mq->m_is_empty )
         {

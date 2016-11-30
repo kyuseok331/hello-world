@@ -19,6 +19,7 @@ enum LexanToken
     kTokenMINUS,
     kTokenSTRING,
     kTokenID,
+    kTokenHELP,
     kTokenVERSION,
     kTokenVOLUME,
     kTokenTIME,

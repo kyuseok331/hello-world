@@ -24,7 +24,6 @@ extern int ChTabList(struct MsgQueue* q_out, int mode);
 extern int ChTabPlay(struct MsgQueue* q_out, int idx);
 extern int ChTabStop(struct MsgQueue* q_out);
 extern int ChTabInfo(struct MsgQueue* q_out);
-extern int ChTabStatus(struct MsgQueue* q_out);
 
 extern int PresetList(struct MsgQueue* q_out);
 extern int PresetStore(struct MsgQueue* q_out, char* pslot);

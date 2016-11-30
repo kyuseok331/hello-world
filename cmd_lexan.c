@@ -21,8 +21,8 @@ char yytext[80];
 int yyleng;
 //int yylval;
 
-#define CR '\r'
 #define LF '\n'
+#define CR '\r'
 #define SPACE ' '
 #define TAB '\t'
 #define PLUS '+'
@@ -52,13 +52,14 @@ struct IdTable {
 };
 
 struct IdTable id_table[] = {
+    {kTokenHELP, "help", 4},
     {kTokenVERSION, "version", 7},
     {kTokenVOLUME, "volume", 6},
     {kTokenTIME, "time", 4},
     {kTokenPROMPT, "prompt", 6},
     {kTokenMODE, "mode", 4},
-    {kTokenDAB, "dab", 3},
-    {kTokenFM, "fm", 2},
+    {kTokenDAB, "DAB", 3},
+    {kTokenFM, "FM", 2},
     {kTokenRESET, "reset", 5},
     {kTokenSCAN, "scan", 4},
     {kTokenTUNE, "tune", 4},
@@ -96,7 +97,7 @@ int CmdLexan(struct MsgQueue* q_in)
         {
             MsgQueueGet(q_in, yyinbuf);
             yyin = yyinbuf;
-            DEBUG_PRINT("get: yyin[0]=%d \"%s\"\n", yyin[0], yyin);
+            // DEBUG_PRINT("get: yyin[0]=%d \"%s\"\n", yyin[0], yyin);
         }
 
         yytext[yyleng++] = *yyin;
@@ -119,6 +120,8 @@ int CmdLexan(struct MsgQueue* q_in)
                 else if (*yyin == MINUS)
                     token = kTokenMINUS;
                 else if (*yyin == LF)
+                    token = kTokenNEWLINE;
+                else if (*yyin == CR)
                     token = kTokenNEWLINE;
                 else if (*yyin == SPACE)    // isblank
                     yyleng = 0;

@@ -52,6 +52,7 @@ C_FLAGS		+= -g
 
 # Include paths
 INC_PATH	=
+INC_PATH	+= -I/usr/local/include
 INC_PATH	+= -I.
 
 DEFS		= $(GLOBAL_DEFS)
@@ -67,8 +68,10 @@ LD_FLAGS	+= -m32
 endif
 
 LD_PATH		= 
+LD_PATH		+= -L/usr/local/lib
 
 LD_LIBS		=
+ LD_LIBS	+= -lwiringPi -lwiringPiDev
  LD_LIBS	+= -lpthread
 #LD_LIBS	+= -lm
 
