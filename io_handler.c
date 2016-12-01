@@ -24,6 +24,7 @@
 #define CR '\r' // 0x0D
 
 int fd_uart;
+pthread_mutex_t uart_mutex; // mutex for access control between threads
 char cmd_input_buf[CMD_INPUT_BUFSIZE];
 
 void *InputHandler(void *arg)
@@ -43,6 +44,8 @@ void *InputHandler(void *arg)
         pthread_exit((void *) 1);
     }
 
+    pthread_mutex_init(&uart_mutex, NULL);
+
     q_in = (struct MsgQueue*) arg;
 
     wp = 0;
@@ -50,28 +53,34 @@ void *InputHandler(void *arg)
     // while ((ch=getch()) != EOF)
     while (1)
     {
+        pthread_mutex_lock(&uart_mutex);
         while (serialDataAvail(fd_uart))
         {
             ch = serialGetchar(fd_uart);
             if (ch == EOT) // 
                 break;
-            if (ch == LF || ch == CR)
+            if (ch == CR)
             {
                 serialPutchar(fd_uart, ch);
-                serialPutchar(fd_uart, LF);
+                // skip this char.
+            }
+            else if (ch == LF)
+            {
+                //serialPutchar(fd_uart, ch);
+                serialPutchar(fd_uart, ch);
                 cmd_input_buf[wp++] = ch;
                 cmd_input_buf[wp] = '\0';
-                {
-                    int i;
-                    char str[80], str2[4];
-                    memset(str, 0, 80);
-                    for (i=0; i<wp; i++)
-                    {
-                        sprintf(str2, " %02x", cmd_input_buf[i]);
-                        strcat(str, str2);
-                    }
-                    DEBUG_PRINT("put cmd_input_buf=%s, cmd_input_buf=\"%s\"\n", str, cmd_input_buf);
-                }
+                // {
+                //     int i;
+                //     char str[80], str2[4];
+                //     memset(str, 0, 80);
+                //     for (i=0; i<wp; i++)
+                //     {
+                //         sprintf(str2, " %02x", cmd_input_buf[i]);
+                //         strcat(str, str2);
+                //     }
+                //     DEBUG_PRINT("put cmd_input_buf=%s, cmd_input_buf=\"%s\"\n", str, cmd_input_buf);
+                // }
                 MsgQueuePut(q_in, (void*) cmd_input_buf);
                 wp = 0;
             }
@@ -89,6 +98,7 @@ void *InputHandler(void *arg)
                 cmd_input_buf[wp++] = ch;
             }
         }
+        pthread_mutex_unlock(&uart_mutex);
         delay(3);   // msec
     }
 

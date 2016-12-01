@@ -1,0 +1,5 @@
+*.[oa]
+*~
+.depend
+obj
+tags

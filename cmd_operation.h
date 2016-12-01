@@ -35,6 +35,10 @@ extern int SortSet(struct MsgQueue* q_out, char* new_sort);
 
 extern int StatusOutput(struct MsgQueue* q_out);
 
+extern int SzOutput(struct MsgQueue* q_out);
+extern int SzSend(struct MsgQueue* q_out, char* filename);
+extern int RzReceive(struct MsgQueue* q_out);
+
 extern int ExitOutput(struct MsgQueue* q_out);
 
 #endif // __CMD_OPERATION_H_

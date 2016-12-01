@@ -1,5 +1,7 @@
-// $Id$
-//
+/*
+ *  cmd_parser.c
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +29,7 @@ enum ParserState
     kParserSearchArg,
     kParserStoreArg,
     kParserPlayArg,
+    kParserSzArg,
     kParserEnd
 } parser_fsm;
 
@@ -138,6 +141,15 @@ int CmdParser(struct MsgQueue* q_in, struct MsgQueue* q_out)
                 else if (token == kTokenSTATUS)
                 {
                     StatusOutput(q_out);
+                    parser_fsm = kParserEnd;
+                }
+
+                else if (token == kTokenSZ)
+                    parser_fsm = kParserSzArg;
+
+                else if (token == kTokenRZ)
+                {
+                    RzReceive(q_out);
                     parser_fsm = kParserEnd;
                 }
 
@@ -279,7 +291,11 @@ int CmdParser(struct MsgQueue* q_in, struct MsgQueue* q_out)
                 }
                 else if (token == kTokenCHANNEL)
                 {
-                    TuneSet(q_out, ChToFreq(yytext));
+                    value = ChToFreq(yytext);
+                    if (value > 0)
+                        TuneSet(q_out, value);
+                    else
+                        ErrorOutput(q_out, "unknown channel label");
                     parser_fsm = kParserEnd;
                 }
                 else
@@ -421,6 +437,20 @@ int CmdParser(struct MsgQueue* q_in, struct MsgQueue* q_out)
                 else
                 {
                     ErrorOutput(q_out, "unknown args: <P#> | <F#>");
+                    parser_fsm = kParserEnd;
+                }
+                break;
+
+            case kParserSzArg:
+                if (token == kTokenNEWLINE)
+                {
+                    SzOutput(q_out);
+                    WaitOutput(q_out);
+                    parser_fsm = kParserBegin;
+                }
+                else if (token == kTokenID)
+                {
+                    SzSend(q_out, yytext);
                     parser_fsm = kParserEnd;
                 }
                 break;

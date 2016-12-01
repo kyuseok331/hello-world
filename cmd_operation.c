@@ -10,8 +10,11 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pthread.h>
 #include "msg_queue.h"
 #include "channel_db.h"
+#include "sz.h"
+#include "rz.h"
 
 #define DEBUG 1
 #define DEBUG_PRINT(fmt, ...) \
@@ -45,6 +48,8 @@ char *help_str[] = {
     "info",
     "signal",
     "status",
+    "sz <filename>",
+    "rz",
     ""
 };
 
@@ -263,7 +268,7 @@ int StatusOutput(struct MsgQueue* q_out)
                 else
                     buff[0] = '\0';
 
-                snprintf(str, 80, "%s %s\n", buff, dir->d_name);
+                snprintf(str, 80, "%s %7d %s\n", buff, f.st_size, dir->d_name);
                 MsgQueuePut(q_out, (void*) str);
             }
         }
@@ -275,6 +280,57 @@ int StatusOutput(struct MsgQueue* q_out)
 
     return 0;
 }
+
+int SzOutput(struct MsgQueue* q_out)
+{
+    MsgQueuePut(q_out, (void*) "Usage: sz <filename>\n");
+    return 0;
+}
+
+extern pthread_mutex_t uart_mutex; // mutex for access control between threads
+int SzSend(struct MsgQueue* q_out, char* filename)
+{
+    // char str[80];
+    // snprintf(str, 80, "sz %s\n", filename);
+    // MsgQueuePut(q_out, (void*) str);
+
+    char **patts;
+    struct stat f;
+
+    if (stat(filename, &f) == -1)
+    {
+        ErrorOutput(q_out, "file does not exist.");
+        return 1;
+    }
+
+    patts = &filename;
+
+    pthread_mutex_lock(&uart_mutex);
+    serialPuts(fd_uart, "\r\n\bSending in Batch Mode\r\n");
+
+    if (wcsend(1, patts)==ERROR) {
+        canit();
+    }
+    pthread_mutex_unlock(&uart_mutex);
+
+    MsgQueuePut(q_out, "Transfer completed.\n");
+    return 0;
+}
+
+int RzReceive(struct MsgQueue* q_out)
+{
+    pthread_mutex_lock(&uart_mutex);
+    serialPuts(fd_uart, "\r\n\bReceiving in Batch Mode\r\n");
+    if (wcreceive(0, NULL)==ERROR) {
+        canit();
+        canit();
+    }
+    pthread_mutex_unlock(&uart_mutex);
+
+    MsgQueuePut(q_out, "Transfer completed.\n");
+    return 0;   // (exitcode);
+}
+
 
 int ExitOutput(struct MsgQueue* q_out)
 {

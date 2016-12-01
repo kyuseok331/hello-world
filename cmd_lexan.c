@@ -82,6 +82,8 @@ struct IdTable id_table[] = {
     {kTokenINFO, "info", 4},
     {kTokenSIGNAL, "signal", 6},
     {kTokenSTATUS, "status", 6},
+    {kTokenSZ, "sz", 2},
+    {kTokenRZ, "rz", 2},
     {kTokenEXIT, "exit", 4},
     {kTokenUndef, "", 0}
 };
@@ -109,7 +111,7 @@ int CmdLexan(struct MsgQueue* q_in)
                     lex_fsm = kLexanP0;
                 else if (tolower(*yyin) == 'f')
                     lex_fsm = kLexanF0;
-                else if (isalpha(*yyin))
+                else if (isalpha(*yyin) || *yyin == '_')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanChannel0;
@@ -135,7 +137,7 @@ int CmdLexan(struct MsgQueue* q_in)
                 break;
 
             case kLexanP0:
-                if (isalpha(*yyin))
+                if (isalpha(*yyin) || *yyin == '_' || *yyin == '.')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanP1;
@@ -149,7 +151,7 @@ int CmdLexan(struct MsgQueue* q_in)
                 break;
 
             case kLexanP1:
-                if (isalpha(*yyin))
+                if (isalpha(*yyin) || *yyin == '_' || *yyin == '.')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanP1;
@@ -163,7 +165,7 @@ int CmdLexan(struct MsgQueue* q_in)
                 break;
 
             case kLexanF0:
-                if (isalpha(*yyin))
+                if (isalpha(*yyin) || *yyin == '_' || *yyin == '.')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanF1;
@@ -177,7 +179,7 @@ int CmdLexan(struct MsgQueue* q_in)
                 break;
 
             case kLexanF1:
-                if (isalpha(*yyin))
+                if (isalpha(*yyin) || *yyin == '_' || *yyin == '.')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanF1;
@@ -191,7 +193,7 @@ int CmdLexan(struct MsgQueue* q_in)
                 break;
 
             case kLexanId:
-                if (isalpha(*yyin))
+                if (isalpha(*yyin) || *yyin == '_' || *yyin == '.')
                     lex_fsm = kLexanId;
                 else if (isdigit(*yyin))
                     lex_fsm = kLexanId;

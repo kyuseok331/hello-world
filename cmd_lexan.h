@@ -49,6 +49,8 @@ enum LexanToken
     kTokenINFO,
     kTokenSIGNAL,
     kTokenSTATUS,
+    kTokenSZ,
+    kTokenRZ,
     kTokenPSLOT,
     kTokenFSLOT,
     kTokenEXIT,
